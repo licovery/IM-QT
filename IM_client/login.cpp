@@ -3,11 +3,11 @@
 #include <QMessageBox>
 
 Login::Login(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::Login)
+    QDialog(parent), ui(new Ui::Login)
 {
-    sockfd = -1;
+
     ui->setupUi(this);
+
     connect(ui->btn_login,SIGNAL(clicked()),this,SLOT(loginTo()));
     connect(ui->btn_register,SIGNAL(clicked()),this,SLOT(registerTo()));
 }
@@ -19,58 +19,72 @@ Login::~Login()
 
 void Login::loginTo()
 {
-    if(sockfd != -1)
-        cs.closeSockfd(sockfd);
-    sockfd = cs.connectTo("127.0.0.1",8888);
-    if(-1 == sockfd)
-        return;
-    loginInfo lf;
-    lf.flag = 1;
-    strcpy(lf.id ,ui->lineEdit_account->text().toStdString().c_str());
-    strcpy(lf.pwd,ui->lineEdit_pwd->text().toStdString().c_str());
-    if(!strcmp(lf.id,"") || !strcmp(lf.pwd,""))
+    sockfd  = cs.connectTo("127.0.0.1",8888);
+    UserInfo userdata;
+    userdata.mode= LOGIN;
+     int flag = 0;
+
+    if(ui->lineEdit_id->text()==""||ui->lineEdit_pwd->text()=="")
     {
-        qDebug() << "pwd or id is empty!" << endl;
         QMessageBox::warning(this, "Login", "id or password is empty");
         return;
     }
-    ssize_t size = send(sockfd,(void*)&lf,sizeof(lf),0);
-    if(-1 == size)
-    {
+
+    strncpy(userdata.id ,ui->lineEdit_id->text().toStdString().c_str(), sizeof(userdata.id));
+    strncpy(userdata.pwd,ui->lineEdit_pwd->text().toStdString().c_str(), sizeof(userdata.pwd));
+
+
+    send(sockfd,&userdata,sizeof(userdata),0);
+    int ret = recv(sockfd,&flag,sizeof(int),0);
+
+    if (ret == 0 || ret == -1) {
+        qDebug() << "recv error";
         return;
     }
-    int flag = 0;
-    size = recv(sockfd,&flag,sizeof(int),0);
-    if(1 == flag)
+
+    if(flag == 1)
     {
         qDebug() << "login successful" << endl;
         hide();
-       // char * to QString
-        main_face = new interface(sockfd, QString(QLatin1String(lf.id)));
+        main_face = new interface(sockfd, QString(userdata.id));
         main_face->show();
-        this->close();
-        //delete this;
     }
     else
     {
         QMessageBox::warning(this, "Login", "id or password is wrong");
-        return;
+        cs.closeSockfd(sockfd);
     }
 }
 
+
 void Login::registerTo()
 {
-    if(-1 == sockfd)
+    sockfd  = cs.connectTo("127.0.0.1",8888);
+    UserInfo userdata;
+    userdata.mode = REGISTER;
+    int flag;
+
+    if(ui->lineEdit_id->text()==""||ui->lineEdit_pwd->text()=="")//用户名或者密码为空则返回
     {
-        connectServer cs;
-        sockfd = cs.connectTo("127.0.0.1",8888);
-        if(-1 == sockfd)
-        {
-            qDebug() << "register don't connect server" << endl;
-            return;
-        }
+        QMessageBox::warning(this,"Register","empty id or password");
+        return;
     }
-    regist = new Register(sockfd);
-    regist->show();
+
+    strncpy(userdata.id, ui->lineEdit_id->text().toStdString().c_str(), sizeof(userdata.id));
+    strncpy(userdata.pwd,ui->lineEdit_pwd->text().toStdString().c_str(), sizeof(userdata.id));
+
+    send(sockfd,&userdata,sizeof(userdata),0);
+    int ret = recv(sockfd,&flag,sizeof(flag),0);
+    if (ret == 0 || ret == -1) {
+        qDebug() << "recv error";
+        return;
+    }
+
+    if (flag == 1)
+        QMessageBox::information(NULL,"Register","successful");
+    else
+        QMessageBox::warning(NULL,"Register","fail");
+
+    cs.closeSockfd(sockfd);
 }
 

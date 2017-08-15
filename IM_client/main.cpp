@@ -1,4 +1,5 @@
 #include "login.h"
+#include "connectserver.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])

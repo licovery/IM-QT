@@ -16,24 +16,28 @@ int connectServer::connectTo(string ip_addr, short port)
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(ip_addr.c_str());
+    bzero(addr.sin_zero, sizeof(addr.sin_zero));
 
     //create sockfd
-    int sockfd = socket(AF_INET,SOCK_STREAM,0);
-    if(-1 == sockfd)
+    int ssockfd = socket(AF_INET,SOCK_STREAM,0);
+    if(ssockfd == -1)
     {
+       qDebug() << "create socket error" << endl;
         return -1;
     }
     //connect to server
-    int res = connect(sockfd,(struct sockaddr*)&addr,sizeof(addr));
-    if(-1 == res)
+    int res = connect(ssockfd,(struct sockaddr*)&addr,sizeof(addr));
+    if(res == -1)
     {
-        close(sockfd);
+        QMessageBox::warning(NULL, "Network Error", "connnect to server fail");
+        close(ssockfd);
+        qDebug() << "connect error" << endl;
         return -1;
     }
     qDebug() << "connect successful!" << endl;
-    return sockfd;
-
+    return ssockfd;
 }
+
 
 void connectServer::closeSockfd(int sockfd)
 {

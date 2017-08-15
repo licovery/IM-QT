@@ -78,7 +78,6 @@ bool Server::acceptClient() {
         sqlstr.append(userdata.id_name).append("'");
         char** row = db->db_select(sqlstr.c_str());
         if(row != NULL && !strcmp(userdata.id_name, row[0]) && !strcmp(userdata.pwd, row[1])) {
-
             //给客户端发送登录状态，登录成功发送1
             cout << userdata.id_name << " login successful" << endl;
             login_flag = 1;
@@ -93,7 +92,6 @@ bool Server::acceptClient() {
             Thread* thread = new Thread(user, list);
             thread->start();
             cout << "user: " << userdata.id_name << " online" << endl;
-
         } else {
             login_flag = 0;
             send(csockfd, &login_flag, sizeof(int), 0);
@@ -107,9 +105,8 @@ bool Server::acceptClient() {
         db->db_insert(sqlstr.c_str());
 
         // send something to tell client register succeed
-        char symbol[6];
-        strcpy(symbol, "neoli");
-        send(csockfd, symbol, sizeof(symbol), 0);
+        login_flag = 1;
+        send(csockfd, &login_flag, sizeof(login_flag), 0);
     }
 
     return true;

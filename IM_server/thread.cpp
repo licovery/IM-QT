@@ -9,8 +9,6 @@ Thread::~Thread() {
 }
 
 void Thread::start() {
-
-
     int ret = pthread_create(&thread, NULL, run, this);
     if(ret != 0)
         cout << "create thread is fail" << endl;

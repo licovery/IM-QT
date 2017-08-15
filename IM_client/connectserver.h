@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string>
 #include <QDebug>
+#include <QMessageBox>
 
 using namespace std;
 
@@ -17,6 +18,7 @@ public:
 
     int connectTo(string ip_addr,short port);
     static void closeSockfd(int sockfd);
+
 
 private:
     struct sockaddr_in addr;

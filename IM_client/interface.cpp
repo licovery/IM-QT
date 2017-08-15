@@ -3,20 +3,20 @@
 #include "file.h"
 
 interface::interface(int sockfd, QString my_id, QWidget *parent) :
-    sockfd(sockfd),my_id(my_id),QWidget(parent),
-    ui(new Ui::interface)
+    sockfd(sockfd),my_id(my_id),QWidget(parent), ui(new Ui::interface)
 {
     ui->setupUi(this);
+
+    ui->me->setText("I am " + my_id);
+    strcpy(msg.from_user_id,this->my_id.toStdString().c_str());
+
     //default all mode
     chatType = 0;
     to_user_id = "";
-    strcpy(msg.from_user_id,this->my_id.toStdString().c_str());
-    ui->me->setText(my_id);
 
     ui->btn_all->setEnabled(false);
-
     ui->tableWidget_userlist->setColumnCount(1);//设置column为1
-    ui->tableWidget_userlist->setColumnWidth(0,211);
+    ui->tableWidget_userlist->setColumnWidth(0,200);
     QStringList list;
     list << "userID";
     ui->tableWidget_userlist->setHorizontalHeaderLabels(list);
@@ -28,22 +28,24 @@ interface::interface(int sockfd, QString my_id, QWidget *parent) :
 
     ui->tableWidget_msgPage->setColumnCount(1);
     ui->tableWidget_msgPage->setShowGrid(false);
-    ui->tableWidget_msgPage->setColumnWidth(0,500);
+    ui->tableWidget_msgPage->setColumnWidth(0,1000);//尽可能多设置窗口宽度
     ui->tableWidget_msgPage->verticalHeader()->setVisible(false);
     ui->tableWidget_msgPage->horizontalHeader()->setVisible(false);
     ui->tableWidget_msgPage->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    recv_Online_userinfo();
+    //recv_Online_userinfo();
 
     thread = new recvMsgThread(sockfd);
     thread->start();
 
-    connect(ui->tableWidget_userlist,SIGNAL(itemDoubleClicked(QTableWidgetItem*)),this,SLOT(getItem(QTableWidgetItem*)));
+    connect(ui->tableWidget_userlist,SIGNAL(itemClicked(QTableWidgetItem*)),this,SLOT(getItem(QTableWidgetItem*)));
+
     connect(ui->btn_one,SIGNAL(clicked()),this,SLOT(btn_one_slot()));
     connect(ui->btn_all,SIGNAL(clicked()),this,SLOT(btn_all_slot()));
     connect(ui->btn_send,SIGNAL(clicked()),this,SLOT(btn_send_slot()));
     connect(ui->btn_refresh,SIGNAL(clicked()),this,SLOT(btn_refresh_slot()));
     connect(ui->btn_send_file,SIGNAL(clicked()),this, SLOT(btn_send_file_slot()));
+
     connect(thread,SIGNAL(sendMsg_signal(Msg*)),this,SLOT(recv_msg(Msg*)));
     connect(thread,SIGNAL(refresh_signal(Msg*, int)),this,SLOT(recv_user(Msg*, int)));
 
@@ -62,31 +64,30 @@ void interface::closeEvent(QCloseEvent *event)
 
 
 
-void interface::recv_Online_userinfo()
-{
-    int length = 0;
-    recv(sockfd,&length,sizeof(int),0);
-    qDebug() << "online user count is:" << length << endl;
-    online_userinfo ouf;
+//void interface::recv_Online_userinfo()
+//{
+//    int length;
+//    recv(sockfd,&msg,sizeof(msg),0);
+//    length = *((int *)msg.msg);
+//    qDebug() << "online user count is:" << length << endl;
+//    online_userinfo ouf;
 
-    int i = 0;
-    while(length--)
-    {
-        recv(sockfd,&ouf,sizeof(ouf),0);
-        ui->tableWidget_userlist->insertRow(i);//刷新列表，删除原来的项，再重新从服务器获取数据
-        ui->tableWidget_userlist->setItem(i,0,new QTableWidgetItem(QString(ouf.id)));
-        i++;
-        qDebug() << "userID: " << ouf.id << endl;
-    }
-}
+//    ui->tableWidget_userlist->clearContents();
+//    for (int i = 0; i < length; i++)
+//    {
+//        recv(sockfd,&msg,sizeof(msg),0);
+//        ui->tableWidget_userlist->insertRow(i);//刷新列表，删除原来的项，再重新从服务器获取数据
+//        ui->tableWidget_userlist->setItem(i,0,new QTableWidgetItem(QString(msg.msg)));
+//        qDebug() << "userID: " << msg.msg << endl;
+//    }
+//}
 
 void interface::getItem(QTableWidgetItem *item)
 {
-    if(1 == chatType)
+    if(chatType == ONE)
     {
-        int row_number = ui->tableWidget_userlist->currentRow();
-        to_user_id = ui->tableWidget_userlist->item(row_number,0)->data(Qt::DisplayRole).toString();
-        ui->chatuser->setText(to_user_id);
+        item->data(Qt::DisplayRole).toString();
+        ui->chatuser->setText("You are talking to: " + to_user_id);
         strcpy(msg.to_user_id ,to_user_id.toStdString().c_str());
         ui->btn_send->setEnabled(true);
     }
@@ -96,25 +97,24 @@ void interface::btn_one_slot()
 {
     ui->btn_all->setEnabled(true);
     ui->btn_one->setEnabled(false);
-    this->ui->tableWidget_userlist->setSelectionMode(QAbstractItemView::SingleSelection); //设置只能选择一行，不能多行选中
-    ui->btn_send->setEnabled(true);
-
+    ui->tableWidget_userlist->setSelectionMode(QAbstractItemView::SingleSelection); //设置只能选择一行
+    to_user_id = ui->tableWidget_userlist->item(0,0)->data(Qt::DisplayRole).toString();
+    ui->chatuser->setText("You are talking to: " + to_user_id);
     chatType = 1;
     strcpy(msg.to_user_id  , to_user_id.toStdString().c_str());
-
-    delete_Msg();
+    ui->tableWidget_msgPage->clearContents();
 }
 
 void interface::btn_all_slot()
 {
+    ui->chatuser->setText("You are talking to: everyone");
     ui->btn_all->setEnabled(false);
-    ui->chatuser->setText("everyone");
     ui->btn_one->setEnabled(true);
-    ui->btn_send->setEnabled(true);
+    ui->tableWidget_userlist->setSelectionMode(QAbstractItemView::NoSelection);
     chatType = 0;
     to_user_id = "";
      strcpy(msg.to_user_id,to_user_id.toStdString().c_str());
-    delete_Msg();
+    ui->tableWidget_msgPage->clearContents();
 }
 
 void interface::btn_send_slot()
@@ -127,6 +127,7 @@ void interface::btn_send_slot()
     strcpy(msg.msg,msg_str.toStdString().c_str());
     msg.service_type = 1;
     send(sockfd,&msg,sizeof(msg),0);
+
     int row_count = ui->tableWidget_msgPage->rowCount();
     ui->tableWidget_msgPage->insertRow(row_count);
     ui->tableWidget_msgPage->setItem(row_count,0,new QTableWidgetItem(QString(msg.msg) + " :我"));
@@ -174,25 +175,8 @@ void interface::recv_user(Msg*m, int i)
     qDebug() << "userID: " << m->msg << endl;
 }
 
-void interface::delete_Msg()//clean windows
-{
-    int row_count = ui->tableWidget_msgPage->rowCount();
-    while(row_count)
-    {
-        row_count--;
-        ui->tableWidget_msgPage->removeRow(row_count);
-    }
-}
 
-void interface::delete_Onlineuser()
-{
-    int row_count = ui->tableWidget_userlist->rowCount();
-    while(row_count)
-    {
-        row_count--;
-        ui->tableWidget_userlist->removeRow(row_count);
-    }
-}
+
 
 
 void interface::btn_refresh_slot()//refresh button
@@ -200,7 +184,7 @@ void interface::btn_refresh_slot()//refresh button
     msg.service_type = 2;
     strcpy(msg.msg,"refresh");
     send(sockfd, &msg, sizeof(msg), 0);
-    delete_Onlineuser();
+    ui->tableWidget_userlist->clearContents();
 }
 
 

@@ -28,9 +28,6 @@ void* recvMsgThread::run(void* arg)
     recvMsgThread* th = (recvMsgThread*)(arg);
     Msg msg;
     //for mode 2
-    int i = -1;
-    int length = 0;
-    int * len;
     while(1)
     {
 //        usleep(1000);
@@ -45,18 +42,14 @@ void* recvMsgThread::run(void* arg)
         }
         else if(msg.service_type == 2)//online user update mode
         {
-
-            if(i == -1){
-                len = (int*)(msg.msg);
-                length  = *len;
-                qDebug() << "online user count is:" << length << endl;
-            }else{
+            int length = 0;
+            length = *((int*)(msg.msg));
+            qDebug() << "online user count is:" << length << endl;
+            for (int i = 0; i < length; i++) {
+                recv(th->sockfd,&msg,sizeof(msg),0);
                 emit th->refresh_signal(&msg, i);
             }
-           i++;
 
-            if(i == length)
-                i = -1;
             /*
             len = (int*)(msg.msg);
             length  = *len;

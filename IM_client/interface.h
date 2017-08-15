@@ -12,7 +12,9 @@
 #include "msg.h"
 #include "recvmsgthread.h"
 
-using namespace std;
+#define ALL 0
+#define ONE 1
+
 
 struct online_userinfo{
     char id[20];
@@ -32,32 +34,32 @@ public:
 
 protected:
     void closeEvent(QCloseEvent * event);
+
 private:
     Ui::interface *ui;
     int sockfd;
-
     Msg msg;
 
     int chatType;//0 is all ,1 is one
 
     QString my_id;
     QString to_user_id;
-    //QString to_user_name;
 
     recvMsgThread* thread;
-    void recv_Online_userinfo();
-    void delete_Msg();
-    void delete_Onlineuser();
+    //void recv_Online_userinfo();
+
 
 private slots:
     void getItem(QTableWidgetItem* item);
+
+    void recv_msg(Msg *m);
+    void recv_user(Msg*m, int i);
+
     void btn_one_slot();
     void btn_all_slot();
     void btn_send_slot();
-    void recv_msg(Msg *m);
-    void btn_refresh_slot();
-    void recv_user(Msg*m, int i);
     void btn_send_file_slot();
+    void btn_refresh_slot();
 };
 
 #endif // INTERFACE_H
