@@ -31,6 +31,25 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Linker>
+			<Add option="-lmysqlclient" />
+			<Add option="-lpthread" />
+			<Add library="/usr/lib/x86_64-linux-gnu/libmysqlclient.so" />
+		</Linker>
+		<Unit filename="dbmysql.cpp" />
+		<Unit filename="dbmysql.h" />
+		<Unit filename="file.cpp" />
+		<Unit filename="file.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="msg.h" />
+		<Unit filename="server.cpp" />
+		<Unit filename="server.h" />
+		<Unit filename="thread.cpp" />
+		<Unit filename="thread.h" />
+		<Unit filename="user.cpp" />
+		<Unit filename="user.h" />
+		<Unit filename="userlist.cpp" />
+		<Unit filename="userlist.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />
