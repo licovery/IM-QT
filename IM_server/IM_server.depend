@@ -1,0 +1,80 @@
+# depslib dependency file v1.0
+1502561702 source:/home/neo/Git/IM/IM_server/dbmysql.cpp
+	"dbmysql.h"
+
+1473159332 /home/neo/Git/IM/IM_server/dbmysql.h
+	<mysql/mysql.h>
+	<iostream>
+	<cstring>
+	<stdio.h>
+
+1502561728 source:/home/neo/Git/IM/IM_server/file.cpp
+	"file.h"
+
+1502262500 /home/neo/Git/IM/IM_server/file.h
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<iostream>
+	<sys/types.h>
+	<sys/socket.h>
+	<unistd.h>
+
+1502560449 source:/home/neo/Git/IM/IM_server/main.cpp
+	<iostream>
+	<string>
+	<stdlib.h>
+	"server.h"
+
+1502528722 /home/neo/Git/IM/IM_server/server.h
+	<unistd.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<arpa/inet.h>
+	<iostream>
+	<cstring>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	"user.h"
+	"userlist.h"
+	"dbmysql.h"
+	"thread.h"
+
+1502531292 /home/neo/Git/IM/IM_server/user.h
+	<arpa/inet.h>
+	<string>
+
+1502559157 /home/neo/Git/IM/IM_server/userlist.h
+	<string>
+	<iostream>
+	<cstring>
+	<map>
+	<vector>
+	"user.h"
+
+1502555746 /home/neo/Git/IM/IM_server/thread.h
+	<pthread.h>
+	<unistd.h>
+	<stdlib.h>
+	<sstream>
+	<string>
+	"user.h"
+	"userlist.h"
+	"msg.h"
+	"file.h"
+
+1502557964 /home/neo/Git/IM/IM_server/msg.h
+
+1502817167 source:/home/neo/Git/IM/IM_server/server.cpp
+	"server.h"
+
+1502817167 source:/home/neo/Git/IM/IM_server/thread.cpp
+	"thread.h"
+
+1502561702 source:/home/neo/Git/IM/IM_server/user.cpp
+	"user.h"
+
+1502561702 source:/home/neo/Git/IM/IM_server/userlist.cpp
+	"userlist.h"
+
