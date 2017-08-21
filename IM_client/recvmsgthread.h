@@ -6,11 +6,10 @@
 #include <sys/socket.h>
 #include <QDebug>
 
-class recvMsgThread : public QObject
-{
+class recvMsgThread : public QObject {
     Q_OBJECT
 public:
-    recvMsgThread(int sockfd,QObject *parent = 0);
+    recvMsgThread(int sockfd, QObject *parent = 0);
     ~recvMsgThread();
 
     void start();
