@@ -49,6 +49,7 @@ message LoginResponse
         ID_CONFLICT = 1;
         OTHER_ERROR = 2;
     }
-    Status result = 1;
+    string user_id = 1;
+    Status result = 2;
 }
 

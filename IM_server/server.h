@@ -9,27 +9,6 @@
 #include "userlist.h"
 #include "msg.h"
 
-
-
-//class Server: public QObject
-//{
-//    Q_OBJECT
-//public:
-//    Server();
-//    virtual ~Server();
-
-//private slots:
-//    bool acceptClient();
-//    bool messageProc();
-//    void closeClient();
-
-//private:
-//    QTcpServer *qServer;
-//    UserList *list;
-//    bool init();
-//};
-
-
 class Server: public QObject
 {
     Q_OBJECT
@@ -45,7 +24,7 @@ public:
 
     void serverProc(const QByteArray &rcvTcpStream, QTcpSocket *readSocket);
 
-    bool sendMsg(const Transaction &transaction);
+    bool sendMsg(const Transaction &transaction, QTcpSocket *sendSocket = nullptr);
 
 private slots:
     void acceptConnection();

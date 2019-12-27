@@ -60,15 +60,19 @@ std::vector<User *> Server::onlineUsers() const
     return list->getOnlineUsers();
 }
 
-bool Server::sendMsg(const Transaction &transaction)
+bool Server::sendMsg(const Transaction &transaction, QTcpSocket *sock)
 {
-    auto dstUser = list->getUserInfo(transaction.getToUserId());
-    assert(dstUser != nullptr);
-    auto sock = dstUser->getSocket();
-    assert(sock != nullptr);
+    if (sock == nullptr)
+    {
+        auto dstUser = list->getUserInfo(transaction.getToUserId());
+        assert(dstUser != nullptr);
+        sock = dstUser->getSocket();
+        assert(sock != nullptr);
+    }
+
     if (!sock->isWritable())
     {
-        std::cerr << dstUser->getId() << " socket can not write" << std::endl;
+        std::cerr << transaction.getToUserId() << " socket can not write" << std::endl;
         return false;
     }
 
@@ -95,17 +99,18 @@ void Server::serverProc(const QByteArray &rcvTcpStream, QTcpSocket *readSocket)
             list->debug();
         }
         transaction.buildLoginRsp(status);
+        sendMsg(transaction, readSocket);
     }
     else if (serviceType == Transaction::ONLINE_SEARCH)
     {
         transaction.buildOnlineUsersRsp(onlineUsers());
+        sendMsg(transaction);
     }
     else if (serviceType == Transaction::CHAT_MSG)
     {
         transaction.buildChatMsgRsp();
+        sendMsg(transaction);
     }
-
-    sendMsg(transaction);
 }
 
 //初始化服务器到监听状态

@@ -10,26 +10,26 @@ TEMPLATE = app
 
 SOURCES += \
     ../comm/im.pb.cc \
-    connectserver.cpp \
+    chatwindow.cpp \
+    client.cpp \
     file.cpp \
     login.cpp \
     main.cpp \
-    recvmsgthread.cpp \
-    interface.cpp
+    mainwindow.cpp
 
 HEADERS  += \
     ../comm/im.pb.h \
-    connectserver.h \
+    chatwindow.h \
+    client.h \
     file.h \
     login.h \
-    msg.h \
-    recvmsgthread.h \
-    userinfo.h \
-    interface.h
+    mainwindow.h \
+    msg.h
 
 FORMS += \
+    chatwindow.ui \
     login.ui \
-    interface.ui
+    mainwindow.ui
 
 INCLUDEPATH += $$PWD/../comm
 

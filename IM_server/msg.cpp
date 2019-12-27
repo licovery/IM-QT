@@ -48,8 +48,8 @@ void Transaction::buildOnlineUsersRsp(std::vector<User *> onlineUsers)
 
 void Transaction::buildChatMsgRsp()
 {
-    toUserId = fromUserId;
     pbMsgRsp = pbMsgReq;
+    toUserId = pbMsgRsp.msg().to_user_id();
 }
 
 std::string Transaction::getRsp() const
