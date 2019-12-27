@@ -1,12 +1,29 @@
-#ifndef MSG
-#define MSG
+#ifndef MSG_H
+#define MSG_H
 
-struct Msg
+#include "im.pb.h"
+#include <string>
+#include <QByteArray>
+#include <QDebug>
+#include <iostream>
+
+struct MsgBuilder
 {
-    int service_type;
-    char to_user_id[20];//if user_id is 0,perform all user
-    char  from_user_id[20];
-    char msg[256];//msg text
+    static std::string buildLoginReq(std::string clientId)
+    {
+        Interface pbMsg;
+
+        auto loginReq = pbMsg.mutable_login_req();
+        loginReq->set_user_id(clientId);
+        std::cout << pbMsg.DebugString() << std::endl;
+
+        std::string output;
+        pbMsg.SerializeToString(&output);
+
+        return output;
+    }
+private:
+
 };
 #endif // MSG
 

@@ -1,8 +1,21 @@
 #include "user.h"
 
-User::User(string id, int csockfd):
-    id(id), csockfd(csockfd) {
+User::User(std::string id, QTcpSocket *qSocket): userId(id), userSocket(qSocket)
+{
 
 }
 
-User::User() {}
+
+std::string User::getId() const
+{
+    return userId;
+}
+
+QTcpSocket *User::getSocket() const
+{
+    return userSocket;
+}
+
+
+
+

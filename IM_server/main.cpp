@@ -1,20 +1,10 @@
-#include <iostream>
-#include <string>
-#include <stdlib.h>
+#include <QCoreApplication>
 #include "server.h"
 
-using namespace std;
-
-int main() {
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
     Server server;
-    while(1) {
-        bool status = server.acceptClient();
-        if(status == false) {
-            server.closeServer();
-            cout << "server error\n";
-            exit(-1);
-        }
-    }
-    return 0;
+    return a.exec();
 }
 

@@ -1,39 +1,67 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <iostream>
-#include <cstring>
-#include <fstream>
-#include <sstream>
-#include <stdlib.h>
-
-#include "user.h"
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QObject>
+#include <set>
+#include <vector>
 #include "userlist.h"
-#include "dbmysql.h"
-#include "thread.h"
+#include "msg.h"
 
-using namespace std;
 
-class Server
+
+//class Server: public QObject
+//{
+//    Q_OBJECT
+//public:
+//    Server();
+//    virtual ~Server();
+
+//private slots:
+//    bool acceptClient();
+//    bool messageProc();
+//    void closeClient();
+
+//private:
+//    QTcpServer *qServer;
+//    UserList *list;
+//    bool init();
+//};
+
+
+class Server: public QObject
 {
+    Q_OBJECT
 public:
     Server();
-    ~Server();
+    virtual ~Server();
 
-    bool acceptClient();
-    void closeServer();
+    void addUser(const std::string &id, QTcpSocket *tcpsocket);
+    void removeUser(User *user);
+
+    LoginResponse::Status checkUserLogin(const std::string &id) const;
+    std::vector<User *> onlineUsers() const;
+
+    void serverProc(const QByteArray &rcvTcpStream, QTcpSocket *readSocket);
+
+    bool sendMsg(const Transaction &transaction);
+
+private slots:
+    void acceptConnection();
+    void readMsg();
+    void closeConnection();
 
 private:
-    struct sockaddr_in addr;
-    int sockfd;
-    UserList* list;
-    DBMysql* db;
+    bool init();
 
-    bool init();//fail:sockfd is -1 success: sockfd
+    QTcpServer *qServer;
+    UserList *list;
+    std::set<QTcpSocket *> *socketPool;
 };
+
+
+
+
 
 #endif // SERVER_H

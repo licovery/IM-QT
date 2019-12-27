@@ -1,3 +1,5 @@
+#if 0
+
 #include "connectserver.h"
 
 connectServer::connectServer()
@@ -19,15 +21,15 @@ int connectServer::connectTo(string ip_addr, short port)
     bzero(addr.sin_zero, sizeof(addr.sin_zero));
 
     //create sockfd
-    int ssockfd = socket(AF_INET,SOCK_STREAM,0);
-    if(ssockfd == -1)
+    int ssockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (ssockfd == -1)
     {
-       qDebug() << "create socket error" << endl;
+        qDebug() << "create socket error" << endl;
         return -1;
     }
     //connect to server
-    int res = connect(ssockfd,(struct sockaddr*)&addr,sizeof(addr));
-    if(res == -1)
+    int res = connect(ssockfd, (struct sockaddr *)&addr, sizeof(addr));
+    if (res == -1)
     {
         QMessageBox::warning(NULL, "Network Error", "connnect to server fail");
         close(ssockfd);
@@ -43,3 +45,4 @@ void connectServer::closeSockfd(int sockfd)
 {
     close(sockfd);
 }
+#endif

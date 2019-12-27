@@ -2,38 +2,23 @@
 #define USERLIST_H
 
 #include <string>
-#include <iostream>
-#include <cstring>
-#include <map>
+#include <set>
 #include <vector>
 #include "user.h"
-using namespace std;
 
-
-
-/*struct Node
-{
-    User user;
-    Node* next;
-    Node(User user): user(user), next(NULL) {}
-    Node() {}
-};*/
 
 class UserList
 {
 public:
-    UserList();
-    ~UserList();
-
-    void add(User user);
-    void remove(User user);
-    int length();
-    int selectSockfd(string id);
-    void show();
-    vector<User> getOnlineUsers();
-
+    void add(User *user);
+    void remove(User *user);
+    void remove(const std::string &id);
+    User *getUserInfo(const std::string &id);
+    bool in(const std::string &id);
+    std::vector<User *> getOnlineUsers();
+    void debug();
 private:
-    map<string, int> mlist;
+    std::set<User *> users;
 };
 
 #endif // USERLIST_H

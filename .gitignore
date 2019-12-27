@@ -33,5 +33,3 @@
 
 #myignore
 build*/
-IM_server/bin/
-IM_server/obj/

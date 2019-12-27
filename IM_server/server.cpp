@@ -1,117 +1,187 @@
 #include "server.h"
+#include <QTcpSocket>
+#include <iostream>
+#include <memory>
+#include "msg.h"
 
-Server::Server() {
-    if(!init())
-        cout << "-------------------------------\n"
-                "init error\n"
-                "-------------------------------\n";
+
+Server::Server()
+{
     list = new UserList();
-    db = new DBMysql("127.0.0.1", "root", "mysql123", "IM");
-    db->db_connect();
+    qServer = new QTcpServer;
+    socketPool = new std::set<QTcpSocket *>;
+
+    // 增加一个服务器状态字段
+    if (!init())
+    {
+        qDebug() << "init error";
+    }
+    else
+    {
+        qDebug() << "init succ";
+    }
 }
 
-Server::~Server() {
+Server::~Server()
+{
     delete list;
-    delete db;
+    delete qServer;
+    delete socketPool;
+}
+
+void Server::addUser(const std::string &id, QTcpSocket *tcpsocket)
+{
+    User *newUser = new User(id, tcpsocket);
+    list->add(newUser);
+}
+
+void Server::removeUser(User *user)
+{
+    assert(user != nullptr);
+    list->remove(user);
+    socketPool->erase(user->getSocket());
+    delete user;
+}
+
+LoginResponse::Status Server::checkUserLogin(const std::string &id) const
+{
+    if (list->in(id))
+    {
+        return LoginResponse::ID_CONFLICT;
+    }
+    else
+    {
+        return LoginResponse::SUCC;
+    }
+}
+
+std::vector<User *> Server::onlineUsers() const
+{
+    return list->getOnlineUsers();
+}
+
+bool Server::sendMsg(const Transaction &transaction)
+{
+    auto dstUser = list->getUserInfo(transaction.getToUserId());
+    assert(dstUser != nullptr);
+    auto sock = dstUser->getSocket();
+    assert(sock != nullptr);
+    if (!sock->isWritable())
+    {
+        std::cerr << dstUser->getId() << " socket can not write" << std::endl;
+        return false;
+    }
+
+    std::cout << "====send====" << std::endl;
+    transaction.debug();
+
+    std::string output = transaction.getRsp();
+    sock->write(output.c_str(), output.size());
+    return true;
+}
+
+void Server::serverProc(const QByteArray &rcvTcpStream, QTcpSocket *readSocket)
+{
+    Transaction transaction;
+    auto serviceType = transaction.parseReq(rcvTcpStream);
+
+    // 上一个函数应该返回data,server处理data返回对应数据给transaction
+    if (serviceType == Transaction::LOGIN)
+    {
+        auto status = checkUserLogin(transaction.getFromUserId());
+        if (status == LoginResponse::SUCC)
+        {
+            addUser(transaction.getFromUserId(), readSocket);
+            list->debug();
+        }
+        transaction.buildLoginRsp(status);
+    }
+    else if (serviceType == Transaction::ONLINE_SEARCH)
+    {
+        transaction.buildOnlineUsersRsp(onlineUsers());
+    }
+    else if (serviceType == Transaction::CHAT_MSG)
+    {
+        transaction.buildChatMsgRsp();
+    }
+
+    sendMsg(transaction);
 }
 
 //初始化服务器到监听状态
-bool Server::init() {
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(8888);
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    //addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    bzero(&addr.sin_zero, 8);
-
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-    //socket()调用失败
-    if(sockfd == -1) {
-        cout << "socket error" << endl;
+bool Server::init()
+{
+    if (qServer == Q_NULLPTR)
+    {
+        qDebug() << "new error";
         return false;
     }
-
-    int ret = bind(sockfd, (struct sockaddr*)&addr, sizeof(addr));
-    if(ret == -1) {
-        close(sockfd);
-        sockfd = -1;
-        cout << "bind error" << endl;
+    if (!qServer->listen(QHostAddress::Any, 8888))
+    {
+        qDebug() << "listen error";
+        qServer->close();
         return false;
     }
+    //新连接到来的处理
+    connect(qServer, SIGNAL(newConnection()), this, SLOT(acceptConnection()));
 
-    //queue-length = 100
-    ret = listen(sockfd, 100);
-    if(ret == -1) {
-        close(sockfd);
-        sockfd = -1;
-        cout << "listen error" << endl;
-        return false;
-    }
     return true;
 }
 
-//接受客户端的请求，如果一个用户的用户名和密码都正确才算是连接上服务器。否则删除已连接套接字描述符
-bool Server::acceptClient() {
-    if(sockfd == -1)
-        return false;
 
-    struct sockaddr_in caddr;
-    socklen_t caddrsize = sizeof(caddr);
-    int csockfd = accept(sockfd, (struct sockaddr*)&caddr, &caddrsize);
-    if(csockfd == -1) {
-        return false;
+void Server::acceptConnection()
+{
+    QTcpSocket *connSocket = qServer->nextPendingConnection();
+    if (connSocket == nullptr)
+    {
+        return;
     }
 
-    userInfo userdata;
+    //首次连接,把网络连接加入连接池
+    socketPool->insert(connSocket);
 
-    //接收客户端登入请求
-    int ret = recv(csockfd, (void*)&userdata, sizeof(userdata), 0);
-    if(ret == -1 || ret == 0) {
-        close(csockfd);
-        return false;
+    // 设定该连接相关的信号处理函数
+    // 客户端发送数据过来
+    connect(connSocket, SIGNAL(readyRead()), this, SLOT(readMsg()));
+    // 客户端连接关闭
+    connect(connSocket, SIGNAL(disconnected()), this, SLOT(closeConnection()));
+
+}
+
+void Server::readMsg()
+{
+    // 遍历userlist,看看哪个user可读
+    qDebug() << "readMsg";
+    QTcpSocket *activeConn = dynamic_cast<QTcpSocket *>(sender());
+
+    if (activeConn->isReadable())
+    {
+        serverProc(activeConn->readAll(), activeConn);
     }
+}
 
-    int login_flag = 0;
-    //登录模式
-    if (userdata.mode == LOGIN) { //login
-        string sqlstr("select * from user where id = '");
-        sqlstr.append(userdata.id_name).append("'");
-        char** row = db->db_select(sqlstr.c_str());
-        if(row != NULL && !strcmp(userdata.id_name, row[0]) && !strcmp(userdata.pwd, row[1])) {
-            //给客户端发送登录状态，登录成功发送1
-            cout << userdata.id_name << " login successful" << endl;
-            login_flag = 1;
+void Server::closeConnection()
+{
+    QObject *closedSocket = sender();
 
-            //将已经登录的用户保存到online用户列表中
-            User user(userdata.id_name, csockfd);
-            list->add(user);
-            list->show();
-
-            //start a thread  for current user
-            send(csockfd, &login_flag, sizeof(int), 0);
-            Thread* thread = new Thread(user, list);
-            thread->start();
-            cout << "user: " << userdata.id_name << " online" << endl;
-        } else {
-            login_flag = 0;
-            send(csockfd, &login_flag, sizeof(int), 0);
-            close(csockfd);
+    for (auto curUser : list->getOnlineUsers())
+    {
+        QTcpSocket *curSocket = curUser->getSocket();
+        if (curSocket == closedSocket)
+        {
+            std::cout << curUser->getId() << " disconnect" << std::endl;
+            // 关闭用户连接
+            curSocket->close();
+            // 从在线用户中移除
+            list->remove(curUser->getId());
+            // 删除该用户
+            delete curUser;
+            break;
         }
-
-    } else if (userdata.mode == REGISTER) { //register
-        cout << "user name: " << userdata.id_name << endl << "pwd: " << userdata.pwd << endl << "register" << endl;
-        string sqlstr("insert into user values('");
-        sqlstr.append(userdata.id_name).append("','").append(userdata.pwd).append("')");
-        db->db_insert(sqlstr.c_str());
-
-        // send something to tell client register succeed
-        login_flag = 1;
-        send(csockfd, &login_flag, sizeof(login_flag), 0);
     }
 
-    return true;
-}
+    QTcpSocket *sock = dynamic_cast<QTcpSocket *>(closedSocket);
+    sock->close();
 
-void Server::closeServer() {
-    close(sockfd);
+    list->debug();
 }

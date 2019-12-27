@@ -1,3 +1,5 @@
+#if 0
+
 #ifndef FILE_H
 #define FILE_H
 #include <stdio.h>
@@ -24,3 +26,4 @@ private:
 };
 
 #endif // FILE_H
+#endif

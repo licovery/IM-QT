@@ -2,12 +2,12 @@
 #define LOGIN_H
 
 #include <QDialog>
-#include "userinfo.h"
-#include "connectserver.h"
 #include "interface.h"
+#include <QTcpSocket>
 
 
-namespace Ui {
+namespace Ui
+{
 class Login;
 }
 
@@ -21,13 +21,15 @@ public:
 
 private:
     Ui::Login *ui;
-    interface* main_face;
-    int sockfd;
-    connectServer cs;
+    MainInterface *main_face;
+    QTcpSocket *tcpSocket;
+    QString clientName;
 
-private slots:
+public slots:
     void loginTo();
-    void registerTo();
+    void loginCheck();
+    void serverClose();
+    //    void registerTo();
 };
 
 #endif // LOGIN_H

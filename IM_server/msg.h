@@ -1,17 +1,68 @@
-#ifndef MSG
-#define MSG
+#ifndef MSG_H
+#define MSG_H
 
-#define CHAT 1
-#define ONLINEUSER 2
-#define SENDFILE 3
+#include "im.pb.h"
+#include <QByteArray>
+#include <string>
+#include <vector>
+#include "user.h"
 
-struct Msg
+
+class Transaction
 {
-    int service_type;
-    char to_user_id[20];//if user_id is 0,perform all user
-    char from_user_id[20];
-    char msg[256];//msg text
+public:
+    enum ServiceType
+    {
+        LOGIN,
+        ONLINE_SEARCH,
+        CHAT_MSG,
+    };
+
+    Transaction()
+    {
+
+    }
+
+    ServiceType parseReq(const QByteArray &tcpstream);
+    ServiceType serviceType() const;
+
+    void buildLoginRsp(LoginResponse::Status status);
+    void buildOnlineUsersRsp(std::vector<User *> onlineUsers);
+    void buildChatMsgRsp();
+
+    std::string getRsp() const;
+    std::string getFromUserId() const;
+    std::string getToUserId() const;
+    void debug() const;
+
+private:
+    std::string fromUserId;
+    std::string toUserId;
+    ServiceType service_type;
+    Interface pbMsgReq;
+    Interface pbMsgRsp;
 };
+
+
+
+// 单例
+//class MsgProc
+//{
+//public:
+//    static MsgProc *getInst()
+//    {
+//        static MsgProc singleInst;
+//        return &singleInst;
+//    }
+//private:
+//    MsgProc() {}
+//    MsgProc(const MsgProc &);
+//    MsgProc &operator=(const MsgProc &);
+//};
+
+
+
+
 
 #endif // MSG
 

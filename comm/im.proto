@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+message Interface
+{
+    oneof interface
+    {
+        InstantMessaging    msg = 1;
+        OnlineUserRequest   online_req = 2;
+        OnlineUserResponse  online_rsp = 3;
+        LoginRequest        login_req = 4;
+        LoginResponse       login_rsp = 5;
+    }
+}
+
+message InstantMessaging
+{
+    enum ServiceType
+    {
+        CHAT = 0;
+        FILE_TRANS = 1;
+    }
+    ServiceType service = 1;
+    string from_user_id = 2;
+    string to_user_id = 3;
+    string chat_msg = 4;
+    bytes file_content = 5;
+}
+
+message OnlineUserRequest
+{
+    string from_user_id = 1;
+}
+
+message OnlineUserResponse
+{ 	
+    repeated string online_user = 1;
+}
+
+message LoginRequest
+{
+    string user_id = 1;
+}
+
+message LoginResponse
+{
+    enum Status
+    {
+        SUCC = 0;
+        ID_CONFLICT = 1;
+        OTHER_ERROR = 2;
+    }
+    Status result = 1;
+}
+

@@ -1,3 +1,5 @@
+#if 0
+
 #ifndef RECVMSGTHREAD_H
 #define RECVMSGTHREAD_H
 #include "msg.h"
@@ -6,16 +8,17 @@
 #include <sys/socket.h>
 #include <QDebug>
 
-class recvMsgThread : public QObject {
+class recvMsgThread : public QObject
+{
     Q_OBJECT
 public:
     recvMsgThread(int sockfd, QObject *parent = 0);
     ~recvMsgThread();
 
     void start();
-    static void* run(void* arg);
+    static void *run(void *arg);
 signals:
-    void sendMsg_signal(Msg* msg);
+    void sendMsg_signal(Msg *msg);
     void refresh_signal(Msg *msg, int i);
 private:
     int sockfd;
@@ -23,3 +26,4 @@ private:
 };
 
 #endif // RECVMSGTHREAD_H
+#endif

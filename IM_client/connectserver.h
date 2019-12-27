@@ -1,3 +1,5 @@
+#if 0
+
 #ifndef CONNECTSERVER_H
 #define CONNECTSERVER_H
 #include <sys/types.h>
@@ -16,7 +18,7 @@ public:
     connectServer();
     ~connectServer();
 
-    int connectTo(string ip_addr,short port);
+    int connectTo(string ip_addr, short port);
     static void closeSockfd(int sockfd);
 
 
@@ -25,3 +27,4 @@ private:
 };
 
 #endif // CONNECTSERVER_H
+#endif
